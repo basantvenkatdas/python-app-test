@@ -13,6 +13,7 @@ class Book(BaseModel):
     author: str
     genre: str
     reviews: List[Review] = []
+    is_favorite: bool = False
 
 class BookCreate(BaseModel):
     title: str
@@ -57,5 +58,17 @@ async def add_review_to_book(book_id: int, review: Review):
     for book in books_db:
         if book.id == book_id:
             book.reviews.append(review)
+            return book
+    raise HTTPException(status_code=404, detail="Book not found")
+
+@app.get("/books/favorites", response_model=List[Book])
+async def get_favorite_books():
+    return [book for book in books_db if book.is_favorite]
+
+@app.post("/books/{book_id}/favorite", response_model=Book)
+async def mark_book_as_favorite(book_id: int):
+    for book in books_db:
+        if book.id == book_id:
+            book.is_favorite = True
             return book
     raise HTTPException(status_code=404, detail="Book not found") 
